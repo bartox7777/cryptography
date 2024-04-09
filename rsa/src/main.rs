@@ -71,13 +71,11 @@ impl RSA {
         return message;
     }
 
-    // generate p and q such that p ≡ 3 (mod 4) and q ≡ 3 (mod 4) and p != q and p,q > 1000
     fn gen_p_q(no_primes: u128) -> (u128, u128) {
         let mut primes = RSA::sieve(no_primes);
         let mut res_primes: [u128; 2] = [0; 2];
-        for i in 0..2 {
-            let idx = primes.iter().position(|&x| x % 4 == 3).unwrap();
-            res_primes[i] = primes.remove(idx);
+        for idx in 0..2 {
+            res_primes[idx] = primes.remove(idx);
         }
         return (res_primes[0], res_primes[1]);
     }
