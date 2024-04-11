@@ -3,9 +3,10 @@ use std::{
     io::{Read, Write},
 };
 
+use crypto::{aes::ecb_encryptor, blockmodes::NoPadding};
 use openssl::{
-    symm::Cipher,
-    symm::{decrypt, encrypt},
+    encrypt,
+    symm::{decrypt, encrypt, Cipher},
 };
 use rand::Rng;
 
@@ -48,68 +49,115 @@ fn decrypt_file(filename: &String, key: &String, iv: &String, cipher: Cipher) ->
     decrypted_filename
 }
 
+// modify one bit in the file
+fn modify_file(filename: &String) {
+    let mut file = File::open(filename).unwrap(); // Open file
+    let mut data = Vec::new(); // Vector to store data
+    file.read_to_end(&mut data).unwrap(); // Read file to vector
+    data[256] = data[256] ^ 0x01; // Modify byte in 0x100 row and 0x00 column
+    file = File::create(filename).unwrap();
+    file.write_all(&data).unwrap();
+    file.sync_all().unwrap();
+}
+
+// Funkcja szyfruj_CBC(plaintext, klucz, iv):
+//     plaintext_blocks = podziel_na_bloki(plaintext)
+//     iv_temp = iv
+//     zaszyfrowany_tekst = []
+
+//     dla każdego bloku w plaintext_blocks:
+//         blok_do_szyfrowania = blok XOR iv_temp
+//         zaszyfrowany_blok = szyfruj_ECB(blok_do_szyfrowania, klucz)
+//         zaszyfrowany_tekst.dodaj(zaszyfrowany_blok)
+//         iv_temp = zaszyfrowany_blok
+
+//     zwróć zaszyfrowany_tekst
+
+// Funkcja deszyfruj_CBC(zaszyfrowany_tekst, klucz, iv):
+//     zaszyfrowane_bloki = podziel_na_bloki(zaszyfrowany_tekst)
+//     iv_temp = iv
+//     odszyfrowany_tekst = []
+
+//     dla każdego bloku w zaszyfrowane_bloki:
+//         odszyfrowany_blok = deszyfruj_ECB(blok, klucz)
+//         blok_plaintext = odszyfrowany_blok XOR iv_temp
+//         odszyfrowany_tekst.dodaj(blok_plaintext)
+//         iv_temp = blok
+
+//     zwróć odszyfrowany_tekst
+
 fn main() {
-    let filename = generate_benchmark_file(1);
     let key = String::from("0123456789ABCDEF"); // key must be known only to sender and receiver
     let iv = String::from("FEDCBA9876543210"); // iv don't need to be secret
 
-    println!("Szyfrowanie AES 128 ECB");
-    let start = std::time::Instant::now();
-    let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ecb());
-    let end_encrypt = start.elapsed();
-    let start_decrypt = std::time::Instant::now();
-    decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_ecb());
-    let end_decrypt = start_decrypt.elapsed();
-    println!(
-        "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
-        end_encrypt, end_decrypt
-    );
+    for i in vec![1, 5, 10] {
+        let filename = generate_benchmark_file(i);
+        println!("File size: {} MiB", i);
+        println!();
+        println!("Szyfrowanie AES 128 ECB");
+        let start = std::time::Instant::now();
+        let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ecb());
+        let end_encrypt = start.elapsed();
+        let start_decrypt = std::time::Instant::now();
+        decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_ecb());
+        let end_decrypt = start_decrypt.elapsed();
+        println!(
+            "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
+            end_encrypt, end_decrypt
+        );
 
-    println!("Szyfrowanie AES 128 CBC");
-    let start = std::time::Instant::now();
-    let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_cbc());
-    let end_encrypt = start.elapsed();
-    let start_decrypt = std::time::Instant::now();
-    decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_cbc());
-    let end_decrypt = start_decrypt.elapsed();
-    println!(
-        "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
-        end_encrypt, end_decrypt
-    );
+        println!("Szyfrowanie AES 128 CBC");
+        let start = std::time::Instant::now();
+        let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_cbc());
+        let end_encrypt = start.elapsed();
+        let start_decrypt = std::time::Instant::now();
+        decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_cbc());
+        let end_decrypt = start_decrypt.elapsed();
+        println!(
+            "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
+            end_encrypt, end_decrypt
+        );
 
-    println!("Szyfrowanie AES 128 OFB");
-    let start = std::time::Instant::now();
-    let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ofb());
-    let end_encrypt = start.elapsed();
-    let start_decrypt = std::time::Instant::now();
-    decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_ofb());
-    let end_decrypt = start_decrypt.elapsed();
-    println!(
-        "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
-        end_encrypt, end_decrypt
-    );
+        println!("Szyfrowanie AES 128 OFB");
+        let start = std::time::Instant::now();
+        let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ofb());
+        let end_encrypt = start.elapsed();
+        let start_decrypt = std::time::Instant::now();
+        decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_ofb());
+        let end_decrypt = start_decrypt.elapsed();
+        println!(
+            "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
+            end_encrypt, end_decrypt
+        );
 
-    println!("Szyfrowanie AES 128 CFB");
-    let start = std::time::Instant::now();
-    let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_cfb1());
-    let end_encrypt = start.elapsed();
-    let start_decrypt = std::time::Instant::now();
-    decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_cfb1());
-    let end_decrypt = start_decrypt.elapsed();
-    println!(
-        "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
-        end_encrypt, end_decrypt
-    );
+        println!("Szyfrowanie AES 128 CFB");
+        let start = std::time::Instant::now();
+        let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_cfb128());
+        let end_encrypt = start.elapsed();
+        let start_decrypt = std::time::Instant::now();
+        decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_cfb128());
+        let end_decrypt = start_decrypt.elapsed();
+        println!(
+            "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
+            end_encrypt, end_decrypt
+        );
 
-    println!("Szyfrowanie AES 128 CTR");
-    let start = std::time::Instant::now();
-    let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ctr());
-    let end_encrypt = start.elapsed();
-    let start_decrypt = std::time::Instant::now();
-    decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_ctr());
-    let end_decrypt = start_decrypt.elapsed();
-    println!(
-        "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
-        end_encrypt, end_decrypt
-    );
+        println!("Szyfrowanie AES 128 CTR");
+        let start = std::time::Instant::now();
+        let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ctr());
+        let end_encrypt = start.elapsed();
+        let start_decrypt = std::time::Instant::now();
+        decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_ctr());
+        let end_decrypt = start_decrypt.elapsed();
+        println!(
+            "Czas szyfrowania: {:?}, czas deszyfrowania: {:?}",
+            end_encrypt, end_decrypt
+        );
+        println!();
+    }
+
+    // let filename = String::from("1MB.bin");
+    // let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ctr());
+    // modify_file(&encrypted_filename);
+    // decrypt_file(&encrypted_filename, &key, &iv, Cipher::aes_128_ctr());
 }
