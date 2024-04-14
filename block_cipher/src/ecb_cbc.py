@@ -36,8 +36,8 @@ def custom_encode(session_key, init_vector, clear_data):
 def custom_decode(session_key, init_vector, secret_data):
     return cipher_transform(session_key, init_vector, secret_data, 'decode')
 
-plaintext = "hello world"
-key = b"123"
+plaintext = "0123456789abcdef"
+key = b"1234567890123456"
 iv = b"1234567890123456"
 custom_encoded = custom_encode(key, iv, plaintext.encode())
 print(custom_encoded)
