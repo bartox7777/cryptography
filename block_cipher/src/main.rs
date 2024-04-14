@@ -3,10 +3,9 @@ use std::{
     io::{Read, Write},
 };
 
-use openssl::{
-    encrypt,
-    symm::{decrypt, encrypt, Cipher},
-};
+use crypto::{aes::{ecb_encryptor, KeySize, ecb_decryptor}, blockmodes::NoPadding};
+
+use openssl::symm::{decrypt, encrypt, Cipher};
 use rand::Rng;
 
 fn generate_benchmark_file(size_mb: usize) -> String {
@@ -57,6 +56,49 @@ fn modify_file(filename: &String) {
     file = File::create(filename).unwrap();
     file.write_all(&data).unwrap();
     file.sync_all().unwrap();
+}
+
+fn encrypt_cbc(key: &String, iv: &String, plaintext: &Vec<u8>) -> Vec<u8> {
+    let mut ciphertext = Vec::new();
+    let mut previous_block = iv.as_bytes().to_vec();
+
+    for i in (0..plaintext.len()).step_by(16) {
+        let block = &plaintext[i..i + 16];
+        let mut encrypted_block = vec![0; 16];
+        ecb_encryptor(KeySize::KeySize128, key.as_bytes(), NoPadding)
+            .encrypt(&mut crypto::buffer::RefReadBuffer::new(&block), &mut crypto::buffer::RefWriteBuffer::new(&mut encrypted_block), true)
+            .unwrap();
+        let encrypted_block = encrypted_block.iter().zip(previous_block.iter()).map(|(a, b)| a ^ b).collect::<Vec<u8>>();
+        ciphertext.extend_from_slice(&encrypted_block);
+        previous_block = encrypted_block.to_vec();
+    }
+
+    ciphertext
+}
+
+
+// use ecb_decryptor from crypto crate
+
+fn decrypt_cbc(key: &String, iv: &String, ciphertext: &Vec<u8>) -> Vec<u8> {
+    let mut plaintext = Vec::new();
+    let mut previous_block = iv.as_bytes().to_vec();
+
+    for i in (0..ciphertext.len()).step_by(16) {
+        let block = &ciphertext[i..i + 16];
+        let mut decrypted_block : Vec<u8> = vec![0; 16];
+        ecb_decryptor(KeySize::KeySize128, key.as_bytes(), NoPadding)
+        .decrypt(
+            &mut crypto::buffer::RefReadBuffer::new(&block),
+            &mut crypto::buffer::RefWriteBuffer::new(&mut decrypted_block),
+            true,
+        )
+        .unwrap();
+        let decrypted_block = decrypted_block.iter().zip(previous_block.iter()).map(|(a, b)| a ^ b).collect::<Vec<u8>>();
+        plaintext.extend_from_slice(&decrypted_block);
+        previous_block = block.to_vec();
+    }
+
+    plaintext
 }
 
 fn main() {
@@ -127,8 +169,9 @@ fn main() {
             end_encrypt, end_decrypt
         );
         println!();
-    }
 
+
+    }
     // let filename = String::from("1MB.bin");
     // let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ctr());
     // modify_file(&encrypted_filename);

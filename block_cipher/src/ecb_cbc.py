@@ -1,16 +1,6 @@
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 
-class ECB:
-    def encode(msg,key):
-        cipher = AES.new(key, AES.MODE_ECB)
-        ciphertext = cipher.encrypt(pad(msg, AES.block_size))
-        return ciphertext
-    def decode(msg_encoded,key):
-        cipher = AES.new(key, AES.MODE_ECB)
-        plaintext = unpad(cipher.decrypt(msg_encoded), AES.block_size)
-        return plaintext
-
 def cipher_transform(key, start_vector, data, mode):
     result_data = b""
     temp_block = start_vector
