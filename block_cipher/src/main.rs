@@ -3,7 +3,6 @@ use std::{
     io::{Read, Write},
 };
 
-use crypto::{aes::ecb_encryptor, blockmodes::NoPadding};
 use openssl::{
     encrypt,
     symm::{decrypt, encrypt, Cipher},
@@ -59,32 +58,6 @@ fn modify_file(filename: &String) {
     file.write_all(&data).unwrap();
     file.sync_all().unwrap();
 }
-
-// Funkcja szyfruj_CBC(plaintext, klucz, iv):
-//     plaintext_blocks = podziel_na_bloki(plaintext)
-//     iv_temp = iv
-//     zaszyfrowany_tekst = []
-
-//     dla każdego bloku w plaintext_blocks:
-//         blok_do_szyfrowania = blok XOR iv_temp
-//         zaszyfrowany_blok = szyfruj_ECB(blok_do_szyfrowania, klucz)
-//         zaszyfrowany_tekst.dodaj(zaszyfrowany_blok)
-//         iv_temp = zaszyfrowany_blok
-
-//     zwróć zaszyfrowany_tekst
-
-// Funkcja deszyfruj_CBC(zaszyfrowany_tekst, klucz, iv):
-//     zaszyfrowane_bloki = podziel_na_bloki(zaszyfrowany_tekst)
-//     iv_temp = iv
-//     odszyfrowany_tekst = []
-
-//     dla każdego bloku w zaszyfrowane_bloki:
-//         odszyfrowany_blok = deszyfruj_ECB(blok, klucz)
-//         blok_plaintext = odszyfrowany_blok XOR iv_temp
-//         odszyfrowany_tekst.dodaj(blok_plaintext)
-//         iv_temp = blok
-
-//     zwróć odszyfrowany_tekst
 
 fn main() {
     let key = String::from("0123456789ABCDEF"); // key must be known only to sender and receiver
