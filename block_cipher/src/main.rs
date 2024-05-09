@@ -3,7 +3,10 @@ use std::{
     io::{Read, Write},
 };
 
-use crypto::{aes::{ecb_encryptor, KeySize, ecb_decryptor}, blockmodes::NoPadding};
+use crypto::{
+    aes::{ecb_decryptor, ecb_encryptor, KeySize},
+    blockmodes::NoPadding,
+};
 
 use openssl::symm::{decrypt, encrypt, Cipher};
 use rand::Rng;
@@ -58,7 +61,6 @@ fn modify_file(filename: &String) {
     file.sync_all().unwrap();
 }
 
-
 fn main() {
     let key = String::from("0123456789ABCDEF"); // key must be known only to sender and receiver
     let iv = String::from("FEDCBA9876543210"); // iv don't need to be secret
@@ -67,6 +69,7 @@ fn main() {
         let filename = generate_benchmark_file(i);
         println!("File size: {} MiB", i);
         println!();
+        // ECB - Electronic Codebook Mode - szyfrowanie bloków niezależnie od siebie
         println!("Szyfrowanie AES 128 ECB");
         let start = std::time::Instant::now();
         let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ecb());
@@ -79,6 +82,7 @@ fn main() {
             end_encrypt, end_decrypt
         );
 
+        // CBC - Cipher Block Chaining Mode - każdy blok jest szyfrowany zależnie od poprzedniego
         println!("Szyfrowanie AES 128 CBC");
         let start = std::time::Instant::now();
         let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_cbc());
@@ -115,6 +119,7 @@ fn main() {
             end_encrypt, end_decrypt
         );
 
+        // CTR - Counter Mode - szyfrowanie bloków zależne od licznika
         println!("Szyfrowanie AES 128 CTR");
         let start = std::time::Instant::now();
         let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ctr());
@@ -127,8 +132,6 @@ fn main() {
             end_encrypt, end_decrypt
         );
         println!();
-
-
     }
     // let filename = String::from("1MB.bin");
     // let encrypted_filename = encrypt_file(&filename, &key, &iv, Cipher::aes_128_ctr());

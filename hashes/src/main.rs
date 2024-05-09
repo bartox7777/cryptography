@@ -150,7 +150,7 @@ fn main() {
                 xor >>= 1; // Shift bits
             }
         }
-        avg += diff as f64 / (hash.len() * 8) as f64; // Add difference to avg
+        avg += diff as f64 / (hash.len() * 8) as f64; // Add difference to avg (as probability) and divide by number of bits in hash
     }
     avg /= 1000.0; // Divide avg by number of iterations
     println!("Probability of change: {}", avg);
