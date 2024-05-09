@@ -2,9 +2,7 @@
 // podział na dwa udziały, a po złożeniu udziałów brak korekcji zniekształcenia formatu i
 // pozostawienie zaszumienia.
 
-use image::{DynamicImage, GenericImageView, GrayImage, ImageBuffer, Luma};
-use std::fs::File;
-use std::io::prelude::*;
+use image::{GrayImage, Luma};
 
 fn main() {
     let img = image::open("src/lena.png").unwrap();
